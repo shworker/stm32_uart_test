@@ -15,29 +15,12 @@
 #include "utils.h"
 #include "uart.h"
 
-// 100 mS
-#define COUNTER_STEP	100
-
-// 1 second
-#define COUNTER_TOTAL	1000
-
-// 10 seconds
-#define CHECK_INTERVAL	10
-
-#define LED_COUNT		4
-#define LED_STATUS		0
-
-uint8_t LED_DATA[LED_COUNT];
-
 // CLI Commands
 #define CMD_PRINT		0xE8A6
 #define CMD_HELP		0x9B20
 
-#define TaskLED1_Priority		tskIDLE_PRIORITY
-#define TaskLEDUPD_Priority		tskIDLE_PRIORITY
-#define TaskModem_Priority		tskIDLE_PRIORITY+1
-#define TaskCLI_Priority		tskIDLE_PRIORITY+2
-#define TaskSensors_Priority	tskIDLE_PRIORITY
+#define TaskLED1_Priority		tskIDLE_PRIORITY+1
+#define TaskCLI_Priority		tskIDLE_PRIORITY+1
 
 // create microrl object and pointer on it
 microrl_t rl;
@@ -45,7 +28,6 @@ microrl_t *prl = &rl;
 
 void led_init()
 {
-
 	/* Включаем тактирование порта B */
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
 
@@ -53,10 +35,11 @@ void led_init()
 	gpio.GPIO_Mode = GPIO_Mode_Out_PP;
 	gpio.GPIO_Pin = GPIO_Pin_5;
 	gpio.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_ResetBits( GPIOB, GPIO_Pin_5 );
 
 	/* Инициализируем GPIO на порту B */
 	GPIO_Init(GPIOB, &gpio);
+
+	GPIO_ResetBits( GPIOB, GPIO_Pin_5 );
 }
 
 /* Temporary task. Demo only */
@@ -76,6 +59,7 @@ void vApplicationTickHook( void )
 
 void help(void){
 	CLI_Print("Available commands:\r\n");
+	CLI_Print("print usart# text\tPrint string to USART#\r\n");
 	CLI_Print("help\tPrint this text\r\n");
 }
 
@@ -156,6 +140,8 @@ int main( void )
 
 	led_init();
 	Init_CLI_USART();
+	InitUsart2(57600);
+	InitUsart3(9600);
 
 	// call init with ptr to microrl instance and print callback
 	microrl_init (prl, CLI_Print);
